@@ -3,8 +3,8 @@ M = {}
 
 -- Set the leader key - must be the first thing
 -- nvim loads, for correct plugin config
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
+-- vim.g.mapleader = ' '
+-- vim.g.maplocalleader = ' '
 
 -- vim.g.vim_markdown_folding_disabled = 1
 vim.o.foldmethod = 'marker'

@@ -16,6 +16,8 @@ alias ta='tmux attach -t'
 alias l='eza -lah'
 alias ls=eza
 alias sl=eza
+alias ll='eza -la --sort=modified --reverse'
+alias llatr="eza -la -smod -r"
 alias c='clear'
 alias s='source ~/.zshrc'
 alias h=heroku
@@ -142,3 +144,8 @@ alias yip='yarn install --pure-lockfile'
 
 alias dark="$DOTFILES/bin/toggle-terminal-dark-mode.sh"
 alias vf='nvim $(fd --type f --hidden --exclude .git | fzf -m --prompt="Open file(s) > ")'
+alias kctl-test='kubectl --context="aws/us-west-1-test"'
+alias kctl-ci='kubectl --context="aws/us-east-1-ci"'
+alias kctl-prod='kubectl --context="aws/us-east-1-prod"'
+alias kctl-dataeng='kubectl --context="aws/us-east-1-dataeng"'
+alias st='git status'

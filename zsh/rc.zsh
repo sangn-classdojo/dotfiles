@@ -55,3 +55,12 @@ bindkey '^?' backward-delete-char
 #eval "$(lua ~/bin/z.lua --init zsh)"
 
 source ~/.api_tz_dont_delete
+# Make Ctrl-a go to beginning of line, Ctrl-e go to end of line
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^R' history-incremental-search-backward
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+

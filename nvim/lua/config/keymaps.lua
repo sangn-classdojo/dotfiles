@@ -1,3 +1,4 @@
+vim.keymap.set("n", "<leader>nt", "<cmd>Neotree toggle<cr>", { desc = "Toggle Neo-tree" })
 -- print("keymaps: start")
 vim.keymap.set('n', ';', ':', { noremap = true })
 -- Remove this line - it blocks leader key mappings
@@ -33,3 +34,26 @@ vim.keymap.set('n', '<leader>q', function()
 end, { desc = 'Open diagnostics list (errors only)' })
 
 -- print("keymaps: done")
+--
+
+-- Leader + ff = fuzzy find files
+vim.keymap.set("n", "<leader>ff", function()
+	require("telescope.builtin").find_files()
+end, { desc = "Find Files" })
+
+-- Don't copy deleted text to clipboard
+vim.keymap.set("n", "d", '"_d')
+vim.keymap.set("n", "dd", '"_dd')
+vim.keymap.set("v", "d", '"_d')
+
+-- Same for change
+vim.keymap.set("n", "c", '"_c')
+vim.keymap.set("v", "c", '"_c')
+-- Create a new tab
+vim.keymap.set("n", "<leader><CR>", ":tabnew<CR>", { desc = "New Tab" })
+
+-- Previous tab
+vim.keymap.set("n", "<leader>[", ":tabprevious<CR>", { desc = "Previous Tab" })
+
+-- Next tab
+vim.keymap.set("n", "<leader>]", ":tabnext<CR>", { desc = "Next Tab" })

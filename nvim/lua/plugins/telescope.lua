@@ -4,22 +4,42 @@ return {
 		"nvim-telescope/telescope.nvim",
 		dependencies = {
 			{
-				-- https://github.com/nvim-telescope/telescope-fzf-native.nvim
-				'nvim-telescope/telescope-fzf-native.nvim', 
-				build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' 
-			},
+				"sangn-classdojo/telescope-fzf-native.nvim",
+				build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build",
+			}
 		},
 
-		opts = {
-			defaults = {
-				mappings = {
-					i = {
-						['<C-u>'] = false,
-						['<C-d>'] = false,
+		opts = function()
+			local action_state = require("telescope.actions.state")
+			local sorters = require("telescope.sorters")
+
+			return {
+				defaults = {
+					mappings = {
+						i = {
+							['<C-u>'] = false,
+							['<C-d>'] = false,
+							-- Ctrl-r to toggle fuzzy/exact matching
+							["<C-r>"] = function(prompt_bufnr)
+								local picker = action_state.get_current_picker(prompt_bufnr)
+								local current_sorter = picker.sorter
+
+								if current_sorter.fuzzy == false then
+									picker.sorter = sorters.get_fuzzy_file()
+									print("Fuzzy matching: ON")
+								else
+									picker.sorter = sorters.get_generic_fuzzy_sorter({ fuzzy = false })
+									print("Fuzzy matching: OFF (exact)")
+								end
+
+								picker:refresh(false, { reset_prompt = false })
+							end,
+						},
 					},
 				},
-			},
-		},
+			}
+		end,
+
 		config = function(_, opts)
 			local telescope = require("telescope")
 			telescope.setup(opts)
@@ -30,7 +50,6 @@ return {
 			vim.keymap.set('n', '<C-k>', require('telescope.builtin').buffers,
 				{ desc = '[ ] Find existing buffers' })
 			vim.keymap.set('n', '<leader>/', function()
-				-- You can pass additional configuration to telescope to change theme, layout, etc.
 				require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes')
 					.get_dropdown {
 						winblend = 10,

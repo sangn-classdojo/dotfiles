@@ -1,15 +1,6 @@
 [user]
-	email = andrew@burgess.io
-	name = Andrew Burgess
-
-[url "git@github.com:classdojo/"]
-    insteadOf = "cd:"
-
-[includeIf "gitdir:~/code/dojo/"]
-    path = ~/.dojo.gitconfig
-
-[include]
-    path = /Users/andrew/code/lib/delta/catppuccin.gitconfig
+	email = sang.nguyen@classdojo.com
+	name = Sang Nguyen
 
 [core]
     pager = delta
@@ -30,3 +21,10 @@
     colorMoved = default
 [push]
 	autoSetupRemote = true
+
+[alias]
+    co = checkout
+    br = branch
+    ci = commit
+    st = status
+    dc = diff --cached

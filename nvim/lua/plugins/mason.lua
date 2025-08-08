@@ -4,6 +4,9 @@ return {
   opts = {
     ensure_installed = {
       "clangd",
+      "lua-language-server",
+      "eslint-lsp",
+      "typescript-language-server",
     },
   },
   config = function(_, opts)
