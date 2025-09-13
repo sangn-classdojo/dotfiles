@@ -67,8 +67,47 @@ return {
 				{ desc = '[F]ind current [W]ord' })
 			vim.keymap.set('n', '<leader>fg', require('telescope.builtin').live_grep,
 				{ desc = '[F]ind by [G]rep' })
-			vim.keymap.set('n', '<leader>fd', require('telescope.builtin').diagnostics,
-				{ desc = '[F]ind [D]iagnostics' })
-		end,
+		vim.keymap.set('n', '<leader>fd', require('telescope.builtin').diagnostics,
+			{ desc = '[F]ind [D]iagnostics' })
+		local tb = require("telescope.builtin")
+		
+		-- :Ag! command - supports regex and directory search
+		vim.api.nvim_create_user_command("Ag", function(opts)
+			local args = opts.fargs
+			local pattern = args[1] or ""
+			local dir = args[2]
+
+			-- Build ripgrep arguments
+			local rg_args = {}
+			
+			-- :Ag! searches everything including hidden/ignored files
+			if opts.bang then
+				table.insert(rg_args, "--no-ignore")
+				table.insert(rg_args, "--hidden")
+			end
+
+			-- Enable PCRE2 regex support for more complex patterns
+			table.insert(rg_args, "--pcre2")
+			
+			-- If pattern contains word boundaries or other regex, use it as-is
+			-- Otherwise ripgrep will handle it naturally
+
+			tb.live_grep({
+				default_text = pattern,
+				search_dirs = dir and { dir } or nil,
+				additional_args = function() 
+					return rg_args
+				end,
+			})
+		end, { nargs = "*", bang = true, complete = "dir" })
+
+		-- \aw - populate :Ag! command but don't execute (let user hit enter)
+		vim.keymap.set("n", "<leader>aw", function()
+			-- Get word under cursor
+			local word = vim.fn.expand("<cword>")
+			-- Pre-populate command line with :Ag! and the word, but don't execute
+			vim.fn.feedkeys(":Ag! " .. word, "n")
+		end, { desc = "Populate :Ag! with word under cursor" })
+	end,
 	},
 }

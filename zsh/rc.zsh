@@ -20,7 +20,7 @@ fi
 autoload -U zmv
 autoload -U promptinit && promptinit
 autoload -U colors && colors
-autoload -Uz compinit && compinit
+autoload -Uz compinit && compinit -u
 
 if test -z ${ZSH_HIGHLIGHT_DIR+x}; then
 else
@@ -63,4 +63,6 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
-
+eval "$(/opt/workbrew/bin/brew shellenv)"
+eval "$(fnm env --use-on-cd --shell zsh)"
+source "$HOME/.rye/env"

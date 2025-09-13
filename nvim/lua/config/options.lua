@@ -10,14 +10,8 @@ M = {}
 vim.o.foldmethod = 'marker'
 vim.o.foldlevel = 0
 
--- Set highlight on search
-vim.o.hlsearch = false
-
 -- Make line numbers default
 vim.wo.number = true
-
--- Enable mouse mode
-vim.o.mouse = 'a'
 
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
@@ -29,6 +23,9 @@ vim.o.breakindent = true
 
 -- Save undo history
 vim.o.undofile = true
+
+vim.o.hlsearch = true  -- highlight all matches after a search/* ?
+vim.o.incsearch = true -- live highlight while typing /pattern
 
 -- Case-insensitive searching UNLESS \C or capital in search
 vim.o.ignorecase = true
@@ -47,6 +44,9 @@ vim.o.completeopt = 'menuone,noselect'
 
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
+
+-- Disable mouse mode to allow system text cursor
+vim.o.mouse = ""
 
 vim.filetype.add({
   pattern = {

@@ -27,6 +27,7 @@ alias trim="awk '{\$1=\$1;print}'"
 alias notes="cd $NOTES_DIR && nvim 00\ HOME.md"
 
 # GIT ALIASES -----------------------------------------------------------------
+
 alias gc='git commit'
 alias gco='git checkout'
 alias ga='git add'
@@ -149,3 +150,17 @@ alias kctl-ci='kubectl --context="aws/us-east-1-ci"'
 alias kctl-prod='kubectl --context="aws/us-east-1-prod"'
 alias kctl-dataeng='kubectl --context="aws/us-east-1-dataeng"'
 alias st='git status'
+
+# Columnized git log - both as glog and git log override  
+alias glog='git log --pretty=format:"%C(yellow)%h%Creset - %C(green)%<(20,trunc)%an%Creset - %C(blue)%ad%Creset - %s" --date=format:"%Y-%m-%d %H:%M"'
+
+# Override git function for columnized log with pager support
+function git() {
+    if [[ $1 == "log" ]]; then
+        # Shift off the 'log' argument to get remaining args
+        shift
+        command git log --pretty=format:"%C(yellow)%h%Creset - %C(green)%<(20,trunc)%an%Creset - %C(blue)%ad%Creset - %s" --date=format:"%Y-%m-%d %H:%M" "$@"
+    else
+        command git "$@"
+    fi
+}

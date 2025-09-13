@@ -41,14 +41,12 @@ vim.keymap.set("n", "<leader>ff", function()
 	require("telescope.builtin").find_files()
 end, { desc = "Find Files" })
 
--- Don't copy deleted text to clipboard
-vim.keymap.set("n", "d", '"_d')
-vim.keymap.set("n", "dd", '"_dd')
-vim.keymap.set("v", "d", '"_d')
+-- If you want delete-without-copy, use leader+d instead:
+vim.keymap.set("n", "<leader>d", '"_d', { desc = "Delete without copying" })
+vim.keymap.set("v", "<leader>d", '"_d', { desc = "Delete without copying" })
+vim.keymap.set("n", "<leader>c", '"_c', { desc = "Change without copying" })
+vim.keymap.set("v", "<leader>c", '"_c', { desc = "Change without copying" })
 
--- Same for change
-vim.keymap.set("n", "c", '"_c')
-vim.keymap.set("v", "c", '"_c')
 -- Create a new tab
 vim.keymap.set("n", "<leader><CR>", ":tabnew<CR>", { desc = "New Tab" })
 
@@ -57,3 +55,121 @@ vim.keymap.set("n", "<leader>[", ":tabprevious<CR>", { desc = "Previous Tab" })
 
 -- Next tab
 vim.keymap.set("n", "<leader>]", ":tabnext<CR>", { desc = "Next Tab" })
+
+-- Function to generate GitHub link with current commit SHA and line numbers
+local function get_github_link()
+	-- Get git root directory
+	local git_root = vim.fn.system("git rev-parse --show-toplevel"):gsub("\n", "")
+	if vim.v.shell_error ~= 0 then
+		print("Not in a git repository")
+		return
+	end
+
+	-- Get current commit SHA
+	local commit_sha = vim.fn.system("git rev-parse HEAD"):gsub("\n", "")
+	if vim.v.shell_error ~= 0 then
+		print("Failed to get commit SHA")
+		return
+	end
+
+	-- Get remote URL and convert to GitHub URL
+	local remote_url = vim.fn.system("git config --get remote.origin.url"):gsub("\n", "")
+	if vim.v.shell_error ~= 0 then
+		print("Failed to get remote URL")
+		return
+	end
+
+	-- Convert SSH/HTTPS remote to GitHub web URL
+	local github_url = remote_url
+	-- Handle SSH format: git@github.com:user/repo.git
+	github_url = github_url:gsub("git@github%.com:", "https://github.com/")
+	-- Handle HTTPS format and remove .git suffix
+	github_url = github_url:gsub("%.git$", "")
+	
+	-- Get current file path relative to git root
+	local current_file = vim.fn.expand("%:p")
+	local relative_path = current_file:gsub(git_root .. "/", "")
+	
+	-- Get line numbers - handle visual mode properly
+	local start_line, end_line
+	local mode = vim.api.nvim_get_mode().mode
+	
+	if mode:match('[vV\22]') then -- Visual, Visual-Line, or Visual-Block mode
+		-- We're currently in visual mode - get selection bounds
+		local cursor_pos = vim.api.nvim_win_get_cursor(0)
+		local visual_start = vim.fn.getpos('v')
+		
+		start_line = math.min(cursor_pos[1], visual_start[2])
+		end_line = math.max(cursor_pos[1], visual_start[2])
+		
+		print("Visual mode detected - lines: " .. start_line .. " to " .. end_line)
+	else
+		-- Not in visual mode - always use current cursor line
+		start_line = vim.fn.line(".")
+		end_line = start_line
+		print("Normal mode - using current line: " .. start_line)
+	end
+	
+	-- Fallback if we still get 0
+	if start_line == 0 then
+		start_line = vim.api.nvim_win_get_cursor(0)[1]
+		end_line = start_line
+	end
+	
+	-- Build GitHub URL
+	local line_fragment
+	if start_line == end_line then
+		line_fragment = "#L" .. start_line
+	else
+		line_fragment = "#L" .. start_line .. "-L" .. end_line
+	end
+	
+	local full_url = github_url .. "/blob/" .. commit_sha .. "/" .. relative_path .. line_fragment
+	
+	-- Copy to system clipboard
+	vim.fn.setreg('+', full_url)
+	print("GitHub link copied to clipboard: " .. full_url)
+	print("Line(s): " .. start_line .. (start_line ~= end_line and "-" .. end_line or ""))
+end
+
+-- Keymaps for GitHub link generation
+vim.keymap.set("n", "<leader>gl", get_github_link, { desc = "Copy GitHub link to current line" })
+vim.keymap.set("v", "<leader>gl", get_github_link, { desc = "Copy GitHub link to selected lines" })
+
+-- Test keymaps - add them here too in case vim-test plugin has loading issues
+vim.keymap.set("n", "<leader>rn", ":TestNearest<CR>", { desc = "Test: Run Nearest" })
+vim.keymap.set("n", "<leader>rl", ":TestLast<CR>", { desc = "Test: Run Last" })
+
+-- Dark mode toggle function
+local function toggle_dark_mode()
+	-- Run the toggle script
+	local result = vim.fn.system("$DOTFILES/bin/toggle-terminal-dark-mode.sh")
+	
+	-- Check if script ran successfully
+	if vim.v.shell_error == 0 then
+		-- Reload the colorscheme to reflect changes immediately
+		vim.cmd("source ~/.config/nvim/lua/plugins/color.lua")
+		
+		-- Check which theme is now active by reading the color.lua file
+		local color_file = io.open(vim.fn.expand("~/.config/nvim/lua/plugins/color.lua"), "r")
+		if color_file then
+			local content = color_file:read("*all")
+			color_file:close()
+			
+			if string.match(content, "catppuccin%-mocha") then
+				print("Switched to dark mode (catppuccin-mocha)")
+			elseif string.match(content, "catppuccin%-latte") then
+				print("Switched to light mode (catppuccin-latte)")
+			else
+				print("Theme toggled")
+			end
+		else
+			print("Theme toggled successfully")
+		end
+	else
+		print("Error running toggle script: " .. result)
+	end
+end
+
+-- Keybinding to toggle dark mode
+vim.keymap.set("n", "<leader>td", toggle_dark_mode, { desc = "Toggle Dark Mode" })

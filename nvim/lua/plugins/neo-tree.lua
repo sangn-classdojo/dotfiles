@@ -21,5 +21,6 @@ return {
 
 		-- Keymap
 		vim.keymap.set("n", "<leader>nt", "<cmd>Neotree toggle<cr>", { desc = "Toggle Neo-tree" })
+		vim.keymap.set("n", "<leader>nf", "<Cmd>Neotree reveal<CR>", { desc = "Neo-tree: reveal current file" })
 	end,
 }

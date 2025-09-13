@@ -19,12 +19,15 @@
 
 [diff]
     colorMoved = default
+
 [push]
 	autoSetupRemote = true
 
 [alias]
     co = checkout
-    br = branch
+	br = branch
     ci = commit
-    st = status
+	st = status --porcelain
     dc = diff --cached
+
+	lg = log --pretty=format:'%C(yellow)%h%Creset | %Cgreen%an%Creset | %Cblue%ad%Creset | %s' --date=format:'%Y-%m-%d %H:%M'
