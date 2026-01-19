@@ -70,9 +70,44 @@ alias gprev='git checkout HEAD^'
 alias gsee="pretty_git_log | head -20 | fzf --ansi --preview=\" echo '{}' | awk '{print \$2}' | bat --color=always\" | awk '{print \$2}' | xargs git show"
 
 function gwa() {
-    git worktree add "../$1" -b "$1"
-    cd "../$1"
-    git branch --set-upstream-to="origin/$1" "$1"
+    local branch=$1
+    /opt/homebrew/bin/git worktree add "../${branch}" -b "${branch}" && \
+        cd "../${branch}" && \
+        /opt/homebrew/bin/git branch --set-upstream-to="origin/${branch}" "${branch}"
+}
+
+wt() {
+    local branch=$1
+    local path="../worktrees/${branch}"
+    
+    # Check if the worktree directory already exists
+    if [ -d "$path" ]; then
+        # Check if it's already a registered worktree (use full path to avoid alias)
+        if /opt/homebrew/bin/git worktree list | /usr/bin/grep -q "$path"; then
+            # It's already a worktree, just cd into it
+            echo "Worktree already exists, switching to it..."
+            cd "$path"
+        else
+            # Directory exists but isn't a worktree, remove it (use /bin/rm to avoid trash alias)
+            echo "Directory exists but isn't a worktree, removing and recreating..."
+            /bin/rm -rf "$path"
+            # Now proceed with normal creation (don't recurse)
+            if /opt/homebrew/bin/git show-ref --verify --quiet refs/heads/"$branch"; then
+                /opt/homebrew/bin/git worktree add "$path" "$branch" && cd "$path"
+            else
+                /opt/homebrew/bin/git worktree add "$path" -b "$branch" && cd "$path"
+            fi
+        fi
+    else
+        # Check if branch exists
+        if /opt/homebrew/bin/git show-ref --verify --quiet refs/heads/"$branch"; then
+            # Branch exists, checkout existing branch
+            /opt/homebrew/bin/git worktree add "$path" "$branch" && cd "$path"
+        else
+            # Branch doesn't exist, create new branch
+            /opt/homebrew/bin/git worktree add "$path" -b "$branch" && cd "$path"
+        fi
+    fi
 }
 
 # FUNCTIONS -------------------------------------------------------------------
@@ -140,6 +175,7 @@ open-at-line () {
 
 # alias ledger='ledger -f "$(find $NOTES_DIR -name transactions.ledger)"'
 alias lg='ledger -f "$(find $NOTES_DIR -name 2024.ledger)"'
+alias 'diff-typecheck'='node --max-old-space-size=5120 ./scripts/diff-typecheck.js'
 
 alias yip='yarn install --pure-lockfile'
 
@@ -164,3 +200,47 @@ function git() {
         command git "$@"
     fi
 }
+
+# Production MySQL connection with AWS SSO authentication check
+prod-mysql() {
+    # Check if authenticated with AWS SSO
+    if ! aws sts get-caller-identity --profile rds_ro &>/dev/null; then
+        echo "Not authenticated. Logging in to AWS SSO..."
+        aws sso login --profile rds_ro
+    fi
+    ~/work/db.sh
+}
+
+# Run tests for all modified tracked files in git status
+run-modified-tests() {
+    local files=($(git status --porcelain | grep "^ M\|^M" | awk '{print $2}'))
+    
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No modified tracked files found."
+        return 1
+    fi
+    
+    echo "Running tests for modified files..."
+    printf '%s\n' "${files[@]}"
+    echo ""
+    
+    pnpm exec mocha "${files[@]}"
+}
+
+alias rmt='run-modified-tests'
+
+# Format a file with prettier
+_prettier() {
+    if [ -z "$1" ]; then
+        echo "Usage: prettier <file>"
+        return 1
+    fi
+    pnpm exec prettier "$1" --write
+}
+
+alias prettier='noglob _prettier'
+
+alias kctl-test='kubectl --context="aws/us-west-1-test"'
+alias kctl-ci='kubectl --context="aws/us-east-1-ci"'
+alias kctl-prod='kubectl --context="aws/us-east-1-prod"'
+alias kctl-dataeng='kubectl --context="aws/us-east-1-dataeng"'

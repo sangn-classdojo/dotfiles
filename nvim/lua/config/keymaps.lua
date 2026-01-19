@@ -44,7 +44,8 @@ end, { desc = "Find Files" })
 -- If you want delete-without-copy, use leader+d instead:
 vim.keymap.set("n", "<leader>d", '"_d', { desc = "Delete without copying" })
 vim.keymap.set("v", "<leader>d", '"_d', { desc = "Delete without copying" })
-vim.keymap.set("n", "<leader>c", '"_c', { desc = "Change without copying" })
+-- Avoid conflict with <leader>cp by not using <leader>c as a normal-mode operator prefix
+vim.keymap.set("n", "<leader>cc", '"_c', { desc = "Change without copying (operator)" })
 vim.keymap.set("v", "<leader>c", '"_c', { desc = "Change without copying" })
 
 -- Create a new tab
@@ -88,7 +89,13 @@ local function get_github_link()
 	
 	-- Get current file path relative to git root
 	local current_file = vim.fn.expand("%:p")
-	local relative_path = current_file:gsub(git_root .. "/", "")
+	-- Ensure git_root doesn't have trailing slash
+	git_root = git_root:gsub("/$", "")
+	-- Make relative path by removing git_root prefix
+	local relative_path = current_file
+	if current_file:sub(1, #git_root) == git_root then
+		relative_path = current_file:sub(#git_root + 2) -- +2 to skip the root and the slash
+	end
 	
 	-- Get line numbers - handle visual mode properly
 	local start_line, end_line
@@ -136,9 +143,32 @@ end
 vim.keymap.set("n", "<leader>gl", get_github_link, { desc = "Copy GitHub link to current line" })
 vim.keymap.set("v", "<leader>gl", get_github_link, { desc = "Copy GitHub link to selected lines" })
 
--- Test keymaps - add them here too in case vim-test plugin has loading issues
-vim.keymap.set("n", "<leader>rn", ":TestNearest<CR>", { desc = "Test: Run Nearest" })
-vim.keymap.set("n", "<leader>rl", ":TestLast<CR>", { desc = "Test: Run Last" })
+-- Function to copy relative file path to clipboard
+local function copy_relative_path()
+	-- Get git root directory (project root)
+	local git_root = vim.fn.system("git rev-parse --show-toplevel"):gsub("\n", "")
+	if vim.v.shell_error ~= 0 then
+		print("Not in a git repository")
+		return
+	end
+
+	-- Get current file path
+	local current_file = vim.fn.expand("%:p")
+	
+	-- Calculate relative path
+	local relative_path = current_file:gsub(git_root .. "/", "")
+	
+	-- Copy to system clipboard
+	vim.fn.setreg('+', relative_path)
+	print("Copied to clipboard: " .. relative_path)
+end
+
+-- Keymap to copy relative file path
+-- Map both <leader>cp and <leader>p for fast tapping reliability
+vim.keymap.set("n", "<leader>cp", copy_relative_path, { desc = "Copy relative file path" })
+vim.keymap.set("n", "<leader>p", copy_relative_path, { desc = "Copy relative file path" })
+
+-- Test keymaps are now centralized in vim-test.lua plugin
 
 -- Dark mode toggle function
 local function toggle_dark_mode()
@@ -173,3 +203,7 @@ end
 
 -- Keybinding to toggle dark mode
 vim.keymap.set("n", "<leader>td", toggle_dark_mode, { desc = "Toggle Dark Mode" })
+
+-- Custom folding keymap (built-in fold commands work automatically)
+vim.keymap.set("n", "<leader>zz", "zMzv", { desc = "Close all folds except current" })
+

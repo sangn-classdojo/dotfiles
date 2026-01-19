@@ -17,6 +17,13 @@ return {
 					["h"] = "close_node",
 				},
 			},
+			filesystem = {
+				filtered_items = {
+					visible = true, -- Show hidden files
+					hide_dotfiles = false,
+					hide_gitignored = false,
+				},
+			},
 		})
 
 		-- Keymap

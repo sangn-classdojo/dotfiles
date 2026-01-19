@@ -7,8 +7,11 @@ M = {}
 -- vim.g.maplocalleader = ' '
 
 -- vim.g.vim_markdown_folding_disabled = 1
-vim.o.foldmethod = 'marker'
-vim.o.foldlevel = 0
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.o.foldtext = 'v:lua.custom_foldtext()'
+vim.o.foldlevel = 99  -- Start with all folds open
+vim.o.foldlevelstart = 99  -- Start with all folds open when opening files
 
 -- Make line numbers default
 vim.wo.number = true

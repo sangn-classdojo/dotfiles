@@ -59,10 +59,29 @@ source ~/.api_tz_dont_delete
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 bindkey '^R' history-incremental-search-backward
+export PATH="/opt/homebrew/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 eval "$(/opt/workbrew/bin/brew shellenv)"
-eval "$(fnm env --use-on-cd --shell zsh)"
+if command -v fnm &> /dev/null; then
+    # Set up fnm environment with --use-on-cd, then override the hook to use absolute path
+    eval "$(/opt/homebrew/bin/fnm env --use-on-cd --shell zsh)"
+    # Override the _fnm_autoload_hook to use absolute path
+    _fnm_autoload_hook () {
+        if [[ -f .node-version || -f .nvmrc || -f package.json ]]; then
+            /opt/homebrew/bin/fnm use --log-level=quiet 2>&1 > /dev/null
+        fi
+    }
+fi
 source "$HOME/.rye/env"
+
+# Ensure per-user TMPDIR is set and writable
+if test ! -d "$HOME/.tmp"; then
+    mkdir -p "$HOME/.tmp"
+    chmod 700 "$HOME/.tmp"
+fi
+export TMPDIR="$HOME/.tmp"
+export PATH="/opt/workbrew/opt/mysql-client/bin:$PATH"
+export PATH="/opt/homebrew/Cellar/mysql-client/9.4.0/bin:$PATH"

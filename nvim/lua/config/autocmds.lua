@@ -27,3 +27,36 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 		end
 	end,
 })
+
+-- Custom command to delete all swap files
+vim.api.nvim_create_user_command('DeleteSwapFiles', function(opts)
+	local scope = opts.args ~= "" and opts.args or "."
+	local patterns = { ".*.sw[pon]", "*.swp", "*.swo", "*.swn" }
+	local deleted = {}
+	
+	for _, pattern in ipairs(patterns) do
+		local cmd = string.format("find %s -name '%s' -type f 2>/dev/null", scope, pattern)
+		local handle = io.popen(cmd)
+		if handle then
+			for file in handle:lines() do
+				local success = os.remove(file)
+				if success then
+					table.insert(deleted, file)
+				end
+			end
+			handle:close()
+		end
+	end
+	
+	if #deleted > 0 then
+		print(string.format("Deleted %d swap file(s):", #deleted))
+		for _, file in ipairs(deleted) do
+			print("  " .. file)
+		end
+	else
+		print("No swap files found in " .. scope)
+	end
+end, {
+	nargs = '?',
+	desc = 'Delete all swap files (optionally specify directory, default: current)',
+})
